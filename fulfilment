@@ -1,0 +1,122 @@
+import random
+import time
+
+class Product:
+    def __init__(self, product_id, name, price, stock):
+        self.product_id = product_id
+        self.name = name
+        self.price = price
+        self.stock = stock
+    
+    def update_stock(self, quantity):
+        if self.stock >= quantity:
+            self.stock -= quantity
+            return True
+        return False
+    
+    def __str__(self):
+        return f"{self.name} (ID: {self.product_id}) - ${self.price} - Stock: {self.stock}"
+
+class Inventory:
+    def __init__(self):
+        self.products = {}
+    
+    def add_product(self, product):
+        self.products[product.product_id] = product
+    
+    def get_product(self, product_id):
+        return self.products.get(product_id, None)
+    
+    def list_products(self):
+        for product in self.products.values():
+            print(product)
+
+class Customer:
+    def __init__(self, customer_id, name, email):
+        self.customer_id = customer_id
+        self.name = name
+        self.email = email
+    
+    def __str__(self):
+        return f"Customer: {self.name} (ID: {self.customer_id}) - Email: {self.email}"
+
+class Order:
+    def __init__(self, order_id, customer, items):
+        self.order_id = order_id
+        self.customer = customer
+        self.items = items  # List of tuples (product, quantity)
+        self.status = "Pending"
+    
+    def process_order(self, inventory):
+        for product, quantity in self.items:
+            if not product.update_stock(quantity):
+                self.status = "Failed"
+                return False
+        self.status = "Fulfilled"
+        return True
+    
+    def __str__(self):
+        return f"Order {self.order_id} - Status: {self.status} - Customer: {self.customer.name}"
+
+class FulfillmentSystem:
+    def __init__(self):
+        self.inventory = Inventory()
+        self.customers = {}
+        self.orders = {}
+    
+    def add_customer(self, customer):
+        self.customers[customer.customer_id] = customer
+    
+    def place_order(self, customer_id, order_items):
+        if customer_id not in self.customers:
+            print("Customer not found.")
+            return
+        
+        customer = self.customers[customer_id]
+        order_id = random.randint(1000, 9999)
+        order = Order(order_id, customer, order_items)
+        
+        if order.process_order(self.inventory):
+            print(f"Order {order_id} has been successfully processed!")
+        else:
+            print(f"Order {order_id} failed due to insufficient stock.")
+        
+        self.orders[order_id] = order
+    
+    def list_orders(self):
+        for order in self.orders.values():
+            print(order)
+
+# Sample Usage
+if __name__ == "__main__":
+    system = FulfillmentSystem()
+    
+    # Adding Products
+    product1 = Product(101, "Laptop", 1200, 10)
+    product2 = Product(102, "Phone", 800, 5)
+    product3 = Product(103, "Headphones", 200, 15)
+    
+    system.inventory.add_product(product1)
+    system.inventory.add_product(product2)
+    system.inventory.add_product(product3)
+    
+    # Adding Customers
+    customer1 = Customer(1, "Alice", "alice@example.com")
+    customer2 = Customer(2, "Bob", "bob@example.com")
+    
+    system.add_customer(customer1)
+    system.add_customer(customer2)
+    
+    # Placing Orders
+    system.place_order(1, [(product1, 2), (product3, 1)])
+    system.place_order(2, [(product2, 6)])  # This order should fail
+    system.place_order(1, [(product2, 1)])
+    
+    # Listing Orders
+    system.list_orders()
+    
+    # Listing Inventory
+    print("\nUpdated Inventory:")
+    system.inventory.list_products()
+    
+    print("\nFulfillment System Execution Completed!")
